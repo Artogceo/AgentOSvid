@@ -12,8 +12,19 @@ All endpoints are served on `localhost:3333`.
 | DELETE | `/api/tasks/:id` | Delete a task |
 | POST | `/api/tasks/:id/run` | Mark task for immediate execution |
 | POST | `/api/tasks/:id/pickup` | Mark task as picked up by agent |
-| POST | `/api/tasks/:id/complete` | Mark task as done with result |
+| POST | `/api/tasks/:id/complete` | Mark task as done with result (set `needsReview: true` to keep it in `needs_review`) |
+| POST | `/api/tasks/:id/review` | Org action (`done` or `rework`) with optional comment |
 | GET | `/api/tasks/queue` | Get executable task queue (sorted by priority) |
+
+### Task payload details
+- `project` – project slug (createya, internal) so Kanban can filter per project.
+- `source` / `sourceMessageId` – link back to issue tracker or manual entry.
+- `orgComment` – notes from Org when sending task обратно в очередь.
+- `reviewComment` – reviewer context stored with `needs_review`.
+- POST `/api/tasks/:id/complete` accepts `needsReview`/`reviewComment` to leave task in `needs_review` instead of `done`.
+- POST `/api/tasks/:id/review` drives Org decisions (`done` → `done`, `rework` → `todo`).
+
+
 
 ## Usage & Models
 

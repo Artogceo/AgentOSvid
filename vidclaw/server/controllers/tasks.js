@@ -216,38 +216,107 @@ export function completeTask(req, res) {
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
   const now = new Date().toISOString();
   const hasError = !!req.body.error;
+  const needsReview = req.body.needsReview === true;
+  const reviewComment = req.body.reviewComment || null;
+  const result = req.body.result || null;
+  const error = req.body.error || null;
 
-  // If recurring, save run to history and reschedule instead of marking done
-  if (tasks[idx].schedule && tasks[idx].scheduleEnabled !== false) {
+  const appendHistoryEntry = () => {
     if (!Array.isArray(tasks[idx].runHistory)) tasks[idx].runHistory = [];
     tasks[idx].runHistory.push({
       completedAt: now,
       startedAt: tasks[idx].startedAt,
-      result: req.body.result || null,
-      error: req.body.error || null,
+      result,
+      error,
+      reviewComment,
     });
+  };
+
+  if (tasks[idx].schedule && tasks[idx].scheduleEnabled !== false) {
+    appendHistoryEntry();
     tasks[idx].status = 'todo';
     tasks[idx].scheduledAt = computeNextRun(tasks[idx].schedule);
-    tasks[idx].result = req.body.result || null;
-    tasks[idx].error = req.body.error || null;
+    tasks[idx].result = result;
+    tasks[idx].error = error;
     tasks[idx].startedAt = null;
     tasks[idx].completedAt = null;
     tasks[idx].subagentId = null;
     tasks[idx].pickedUp = false;
+    tasks[idx].reviewComment = reviewComment;
     tasks[idx].updatedAt = now;
+  } else if (needsReview) {
+    appendHistoryEntry();
+    tasks[idx].status = 'needs_review';
+    tasks[idx].completedAt = null;
+    tasks[idx].updatedAt = now;
+    tasks[idx].result = result;
+    tasks[idx].error = error;
+    tasks[idx].subagentId = null;
+    tasks[idx].pickedUp = false;
+    tasks[idx].reviewComment = reviewComment;
   } else {
+    appendHistoryEntry();
     tasks[idx].status = 'done';
     tasks[idx].completedAt = now;
     tasks[idx].updatedAt = now;
-    tasks[idx].result = req.body.result || null;
+    tasks[idx].result = result;
+    tasks[idx].error = hasError ? error : null;
     tasks[idx].subagentId = null;
     tasks[idx].pickedUp = false;
-    if (hasError) tasks[idx].error = req.body.error;
+    tasks[idx].reviewComment = reviewComment;
   }
+
   writeTasks(tasks);
-  const resultSnippet = (req.body.result || '').slice(0, 500) || null;
-  const errorSnippet = (req.body.error || '').slice(0, 500) || null;
-  logActivity('bot', 'task_completed', { taskId: req.params.id, title: tasks[idx].title, hasError, result: resultSnippet, error: errorSnippet });
+  const resultSnippet = (result || '').slice(0, 500) || null;
+  const errorSnippet = (error || '').slice(0, 500) || null;
+  logActivity('bot', 'task_completed', {
+    taskId: req.params.id,
+    title: tasks[idx].title,
+    hasError,
+    result: resultSnippet,
+    error: errorSnippet,
+    needsReview,
+  });
+  broadcast('tasks', tasks);
+  res.json(tasks[idx]);
+}
+export function reviewTask(req, res) {
+  const tasks = readTasks();
+  const idx = tasks.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  const now = new Date().toISOString();
+  const action = req.body.action;
+  const comment = req.body.comment || null;
+  if (!['done', 'rework'].includes(action)) {
+    return res.status(400).json({ error: 'action must be either done or rework' });
+  }
+
+  if (action === 'done') {
+    tasks[idx].status = 'done';
+    tasks[idx].completedAt = now;
+    tasks[idx].result = comment;
+    tasks[idx].reviewComment = comment;
+    tasks[idx].error = null;
+  } else {
+    tasks[idx].status = 'todo';
+    tasks[idx].completedAt = null;
+    tasks[idx].result = null;
+    tasks[idx].error = null;
+    tasks[idx].orgComment = comment;
+    tasks[idx].reviewComment = null;
+  }
+  tasks[idx].subagentId = null;
+  tasks[idx].pickedUp = false;
+  tasks[idx].startedAt = null;
+  tasks[idx].updatedAt = now;
+
+  writeTasks(tasks);
+  logActivity('bot', 'task_review', {
+    taskId: req.params.id,
+    title: tasks[idx].title,
+    action,
+    comment,
+  });
   broadcast('tasks', tasks);
   res.json(tasks[idx]);
 }
