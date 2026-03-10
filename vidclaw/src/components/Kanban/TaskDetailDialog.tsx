@@ -301,7 +301,7 @@ export default function TaskDetailDialog({ open, onClose, task }: TaskDetailDial
             {task.tz && (
               <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-lg">
                 <h3 className="text-xs font-medium text-indigo-400 uppercase tracking-wide mb-2 flex items-center gap-1">
-                  <FileText size={12} /
+                  <FileText size={12} />
                   Техническое задание (ТЗ) от Орга
                 </h3>
                 <div className="text-sm text-foreground/90 whitespace-pre-wrap">{task.tz}</div>

@@ -216,6 +216,7 @@ export function pickupTask(req, res) {
   writeTasks(tasks);
   
   // Add activity log entry
+  const now = new Date().toISOString();
   const activityEntry = {
     id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
     taskId: req.params.id,
