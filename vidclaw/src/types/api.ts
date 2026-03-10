@@ -45,10 +45,6 @@ export interface Task {
   attachments: Attachment[]
   previousStatus: string | null
   archivedAt: string | null
-  project: string | null
-  org: string | null
-  orgComment: string | null
-  reviewComment: string | null
 }
 
 export interface CreateTaskRequest {
