@@ -67,6 +67,8 @@ export const api = {
     capacity: () => request<Capacity>("/api/tasks/capacity"),
     scheduleToggle: (id: string, enabled?: boolean) =>
       post<Task>(`/api/tasks/${id}/schedule-toggle`, { enabled }),
+    review: (id: string, action: 'done' | 'rework', comment: string) =>
+      post<Task>(`/api/tasks/${id}/review`, { action, comment }),
     bulkDelete: (opts: { status?: string; ids?: string[] }) =>
       post<{ ok: true; archived: number }>("/api/tasks/bulk-delete", opts),
     attachments: {

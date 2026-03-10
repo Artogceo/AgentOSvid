@@ -1,2 +1,3 @@
 - 2026-03-10: Met Artur; serving as a task orchestration assistant for the Agent Console system. Need to vet the AC webhook flow and compare it to the OpenClaw-backed setup once the repo arrives.
 - 2026-03-10: GitHub credentials live in `~/.op_credentials` (PAT) and `~/.ssh/id_ed25519`; created `Artogceo/AgentOSvid` repo and bootstrapped local clone at `AgentOSvid/`.
+- 2026-03-10: Artur wants me to remember where project documentation/config is stored before he restarts the session.

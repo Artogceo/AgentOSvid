@@ -22,6 +22,7 @@ const COLUMNS: ColumnDef[] = [
   { id: 'backlog', title: 'Backlog', color: 'bg-zinc-500' },
   { id: 'todo', title: 'Todo', color: 'bg-blue-500' },
   { id: 'in-progress', title: 'In Progress', color: 'bg-amber-500' },
+  { id: 'needs_review', title: 'Needs Review', color: 'bg-purple-500' },
   { id: 'done', title: 'Done', color: 'bg-green-500' },
 ]
 
@@ -194,6 +195,11 @@ export default function Board({ visible = true }: BoardProps) {
     setViewTask(task)
   }
 
+  async function handleReview(taskId: string, action: 'done' | 'rework', comment: string): Promise<void> {
+    await api.tasks.review(taskId, action, comment)
+    invalidateTasks()
+  }
+
   if (loading) return <PageSkeleton variant="kanban" />
 
   return (
@@ -238,6 +244,7 @@ export default function Board({ visible = true }: BoardProps) {
                 onRun={handleRun}
                 onToggleSchedule={handleToggleSchedule}
                 onBulkArchive={handleBulkArchive}
+                onReview={handleReview}
                 capacity={col.id === 'in-progress' ? capacity : undefined}
               />
             ))}

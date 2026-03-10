@@ -202,6 +202,7 @@ interface ColumnProps {
   onRun: (id: string) => void
   onToggleSchedule: (id: string, enabled: boolean) => void
   onBulkArchive?: (status: string) => void
+  onReview?: (taskId: string, action: 'done' | 'rework', comment: string) => void
   capacity?: Capacity
 }
 
