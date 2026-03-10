@@ -2,6 +2,38 @@
 
 Skills define _how_ tools work. This file is for _your_ specifics — the stuff that's unique to your setup.
 
+## Audio Transcription (Whisper)
+
+**Tool:** OpenAI Whisper (local, no API key)
+**Binary:** `/opt/homebrew/bin/whisper`
+**Models:** `~/.cache/whisper/` (base, small, large-v3-turbo, tiny)
+
+### Usage
+
+```bash
+# Basic transcription
+whisper /path/to/audio.ogg --model small --language ru --output_format txt --output_dir /tmp
+
+# Available models (speed vs accuracy)
+# tiny   - fastest, lowest accuracy
+# base   - fast, good accuracy
+# small  - balanced (recommended)
+# medium - slower, better accuracy
+# large-v3-turbo - best accuracy, slowest
+
+# Output formats: txt, vtt, srt, tsv, json
+```
+
+### Quick Transcribe Function
+
+```bash
+# Add to .zshrc or use directly
+transcribe() {
+    whisper "$1" --model small --language ru --output_format txt --output_dir /tmp
+    cat "/tmp/$(basename "$1" .ogg).txt"
+}
+```
+
 ## What Goes Here
 
 Things like:
