@@ -206,7 +206,7 @@ interface ColumnProps {
   capacity?: Capacity
 }
 
-export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onView, onDelete, onRun, onToggleSchedule, onBulkArchive, capacity }: ColumnProps) {
+export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onView, onDelete, onRun, onToggleSchedule, onBulkArchive, onReview, capacity }: ColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
   const [adding, setAdding] = useState(false)
   const [title, setTitle] = useState('')
@@ -299,7 +299,31 @@ export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onVie
       <div className="flex-1 overflow-y-auto p-2 space-y-2 min-h-[120px]">
         <SortableContext items={taskIds} strategy={verticalListSortingStrategy}>
           {tasks.map(task => (
-            <TaskCard key={task.id} task={task} onEdit={onEdit} onView={onView} onDelete={onDelete} onRun={onRun} onToggleSchedule={onToggleSchedule} />
+            <div key={task.id} className="space-y-1">
+              <TaskCard task={task} onEdit={onEdit} onView={onView} onDelete={onDelete} onRun={onRun} onToggleSchedule={onToggleSchedule} />
+              {column.id === 'needs_review' && onReview && (
+                <div className="flex gap-1 px-1">
+                  <button
+                    onClick={() => {
+                      const comment = window.prompt('Approval comment (optional):') || ''
+                      onReview(task.id, 'done', comment)
+                    }}
+                    className="flex-1 text-[10px] px-2 py-1 bg-green-500/20 text-green-400 rounded hover:bg-green-500/30 transition-colors"
+                  >
+                    ✓ Done
+                  </button>
+                  <button
+                    onClick={() => {
+                      const comment = window.prompt('Rework instructions:') || ''
+                      if (comment) onReview(task.id, 'rework', comment)
+                    }}
+                    className="flex-1 text-[10px] px-2 py-1 bg-amber-500/20 text-amber-400 rounded hover:bg-amber-500/30 transition-colors"
+                  >
+                    ↻ Rework
+                  </button>
+                </div>
+              )}
+            </div>
           ))}
         </SortableContext>
       </div>
