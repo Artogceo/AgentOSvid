@@ -4,7 +4,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { cn } from '@/lib/utils'
 import { formatTime, formatDuration, formatRelativeTime } from '@/lib/time'
 import { useTimezone } from '../TimezoneContext'
-import { GripVertical, Trash2, Play, AlertCircle, Loader2, Clock, CheckCircle2, ChevronDown, ChevronUp, FileText, Timer, Paperclip, MessageCircle } from 'lucide-react'
+import { GripVertical, Trash2, Play, AlertCircle, Loader2, Clock, CheckCircle2, ChevronDown, ChevronUp, FileText, Timer, Paperclip, MessageCircle, Folder, Building2, MessageSquareText } from 'lucide-react'
 import { AttachmentBadge, AttachmentThumbnails } from './AttachmentSection'
 import MarkdownRenderer from '../Markdown/MarkdownRenderer'
 import type { Task } from '@/types/api'
@@ -88,6 +88,7 @@ export default function TaskCard({ task, onEdit, onView, onDelete, onRun, onTogg
   const resultSummary = !hasError ? truncateResult(task.result) : null
   const hasFullResult = task.result && task.result.length > 120
   const filePaths = isDone ? extractFilePaths(task.result) : []
+  const hasComments = !!(task.orgComment || task.reviewComment)
 
   const [elapsed, setElapsed] = useState('')
   useEffect(() => {
@@ -135,6 +136,43 @@ export default function TaskCard({ task, onEdit, onView, onDelete, onRun, onTogg
             <p className={cn('text-sm font-medium truncate', isDone && 'text-foreground/70')}>{task.title}</p>
           </div>
 
+          {/* Project/Source Badges Row */}
+          {(task.project || task.source || task.org) && (
+            <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+              {task.project && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400" title="Project">
+                  <Folder size={10} /> {task.project}
+                </span>
+              )}
+              {task.org && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/20 text-purple-400" title="Organization">
+                  <Building2 size={10} /> {task.org}
+                </span>
+              )}
+              {task.source && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400" title={`Source: ${task.source}`}>
+                  <MessageCircle size={10} /> {task.source}
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Comments indicator */}
+          {hasComments && (
+            <div className="flex items-center gap-1.5 mt-1">
+              {task.orgComment && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400" title={`Org: ${task.orgComment.slice(0, 50)}...`}>
+                  <MessageSquareText size={10} /> Org
+                </span>
+              )}
+              {task.reviewComment && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-400" title={`Review: ${task.reviewComment.slice(0, 50)}...`}>
+                  <MessageSquareText size={10} /> Review
+                </span>
+              )}
+            </div>
+          )}
+
           {isDone && !expanded && resultSummary && (
             <p className="text-[11px] text-muted-foreground/80 mt-1 line-clamp-2 italic">{resultSummary}</p>
           )}
@@ -145,6 +183,23 @@ export default function TaskCard({ task, onEdit, onView, onDelete, onRun, onTogg
 
           {isDone && expanded && (
             <div className="mt-2">
+              {/* Show comments in expanded view */}
+              {(task.orgComment || task.reviewComment) && (
+                <div className="mb-2 space-y-1.5">
+                  {task.orgComment && (
+                    <div className="bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1.5">
+                      <span className="text-[10px] text-amber-400 font-medium">Org Comment:</span>
+                      <p className="text-[11px] text-foreground/80 mt-0.5">{task.orgComment}</p>
+                    </div>
+                  )}
+                  {task.reviewComment && (
+                    <div className="bg-cyan-500/10 border border-cyan-500/20 rounded px-2 py-1.5">
+                      <span className="text-[10px] text-cyan-400 font-medium">Review Comment:</span>
+                      <p className="text-[11px] text-foreground/80 mt-0.5">{task.reviewComment}</p>
+                    </div>
+                  )}
+                </div>
+              )}
               {hasError && (
                 <div className="mb-2">
                   <span className="text-red-400 font-medium text-[11px]">Error:</span>
@@ -207,11 +262,6 @@ export default function TaskCard({ task, onEdit, onView, onDelete, onRun, onTogg
         {task.channel && (
           <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400">
             <MessageCircle size={10} /> {task.channel}
-          </span>
-        )}
-        {task.source && (
-          <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-400" title={`Source: ${task.source}`}>
-            <MessageCircle size={10} /> {task.source}
           </span>
         )}
         {hasError && !isDone && (

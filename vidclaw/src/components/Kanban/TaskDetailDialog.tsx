@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { X, Bot, User, Activity, FileText, AlertCircle, Clock, CheckCircle2, Loader2, MessageCircle } from 'lucide-react'
+import { X, Bot, User, Activity, FileText, AlertCircle, Clock, CheckCircle2, Loader2, MessageCircle, Folder, Building2, MessageSquareText, Building } from 'lucide-react'
 import AttachmentSection from './AttachmentSection'
 import { cn } from '@/lib/utils'
 import { extractFilePaths } from './TaskCard'
@@ -246,30 +246,50 @@ export default function TaskDetailDialog({ open, onClose, task }: TaskDetailDial
               {isDone && hasError && <AlertCircle size={16} className="text-red-400 shrink-0" />}
               <h2 className="text-lg font-semibold">{task.title}</h2>
             </div>
-            {(skillsList.length > 0 || task.channel) && (
-              <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+            
+            {/* Project/Source/Org Badges */}
+            {(task.project || task.source || task.org || skillsList.length > 0 || task.channel) && (
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {task.project && (
+                  <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
+                    <Folder size={11} /> {task.project}
+                  </span>
+                )}
+                {task.org && (
+                  <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400">
+                    <Building2 size={11} /> {task.org}
+                  </span>
+                )}
+                {task.source && (
+                  <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">
+                    <MessageCircle size={11} /> {task.source}
+                  </span>
+                )}
                 {skillsList.map(sk => (
                   <span key={sk} className="text-[11px] px-2 py-0.5 rounded-full bg-orange-500/20 text-orange-400">{sk}</span>
                 ))}
                 {task.channel && (
-                  <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-400">
+                  <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-slate-500/20 text-slate-400">
                     <MessageCircle size={10} /> {task.channel}
                   </span>
                 )}
               </div>
             )}
+
+            {/* Source Message Info */}
+            {(task.source || task.sourceMessageId) && (
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1.5">
+                {task.sourceMessageId && (
+                  <span className="text-muted-foreground/60">Ref: #{task.sourceMessageId}</span>
+                )}
+              </div>
+            )}
+
             {(task.startedAt || task.completedAt) && (
               <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-1.5">
                 <span>Started {formatTime(task.startedAt || task.createdAt, timezone)}</span>
                 {duration && <span className="text-green-400 font-medium flex items-center gap-0.5"><Clock size={10} />{duration}</span>}
                 {isInProgress && elapsed && <span className="text-amber-400 font-medium flex items-center gap-0.5"><Clock size={10} />{elapsed}</span>}
-              </div>
-            )}
-            {task.source && (
-              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground mt-1">
-                <MessageCircle size={12} className="text-blue-400" />
-                <span>Source: <span className="text-blue-400 font-medium">{task.source}</span></span>
-                {task.sourceMessageId && <span className="text-muted-foreground/60">#{task.sourceMessageId}</span>}
               </div>
             )}
           </div>
@@ -282,6 +302,31 @@ export default function TaskDetailDialog({ open, onClose, task }: TaskDetailDial
               <div>
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Description</h3>
                 <p className="text-sm text-foreground/90">{task.description}</p>
+              </div>
+            )}
+
+            {/* Comments Section */}
+            {(task.orgComment || task.reviewComment) && (
+              <div className="space-y-3">
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Comments</h3>
+                {task.orgComment && (
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <MessageSquareText size={12} className="text-amber-400" />
+                      <span className="text-xs font-medium text-amber-400">Organization Comment</span>
+                    </div>
+                    <p className="text-sm text-foreground/90 whitespace-pre-wrap">{task.orgComment}</p>
+                  </div>
+                )}
+                {task.reviewComment && (
+                  <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-lg p-3">
+                    <div className="flex items-center gap-1.5 mb-1.5">
+                      <MessageSquareText size={12} className="text-cyan-400" />
+                      <span className="text-xs font-medium text-cyan-400">Review Comment</span>
+                    </div>
+                    <p className="text-sm text-foreground/90 whitespace-pre-wrap">{task.reviewComment}</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -332,7 +377,7 @@ export default function TaskDetailDialog({ open, onClose, task }: TaskDetailDial
         </div>
 
         <div className="flex justify-end gap-2 px-5 py-4 border-t border-border shrink-0">
-<button onClick={onClose} className="px-4 py-2 text-sm rounded-md bg-secondary hover:bg-accent transition-colors">Close</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm rounded-md bg-secondary hover:bg-accent transition-colors">Close</button>
         </div>
       </div>
     </div>
