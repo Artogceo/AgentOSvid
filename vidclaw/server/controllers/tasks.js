@@ -213,7 +213,27 @@ export function pickupTask(req, res) {
   tasks[idx].updatedAt = new Date().toISOString();
   if (req.body.subagentId) tasks[idx].subagentId = req.body.subagentId;
   writeTasks(tasks);
-  logActivity('bot', 'task_pickup', { taskId: req.params.id, title: tasks[idx].title, subagentId: req.body.subagentId || null });
+  
+  // Add activity log entry
+  const activityEntry = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    taskId: req.params.id,
+    author: req.body.subagentId || 'Org',
+    text: `Задача взята в работу. Орг: ${req.body.subagentId || 'Org'}. Статус: in-progress.`,
+    type: 'pickup',
+    timestamp: now
+  };
+  
+  if (!tasks[idx].activity) tasks[idx].activity = [];
+  tasks[idx].activity.push(activityEntry);
+  
+  logActivity('bot', 'task_pickup', { 
+    taskId: req.params.id, 
+    title: tasks[idx].title, 
+    subagentId: req.body.subagentId || null,
+    actor: req.body.subagentId || 'Org'
+  });
+  
   broadcast('tasks', tasks);
   res.json(tasks[idx]);
 }
@@ -222,6 +242,21 @@ export function completeTask(req, res) {
   const tasks = readTasks();
   const idx = tasks.findIndex(t => t.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  
+  // Validate detailed report for needsReview
+  if (req.body.needsReview === true) {
+    const result = req.body.result || '';
+    const hasWhatDone = /[📝#]\s*(Что сделано|What done|Выполнено|Done)/i.test(result);
+    const hasHowVerify = /[✅#]\s*(Как проверить|How to verify|Проверка|Check)/i.test(result);
+    
+    if (!hasWhatDone || !hasHowVerify) {
+      return res.status(400).json({ 
+        error: 'Детальный отчёт обязателен. Должны быть разделы: "📁 Изменённые файлы", "📝 Что сделано", "✅ Как проверить"',
+        required: ['📁 Изменённые файлы', '📝 Что сделано', '✅ Как проверить']
+      });
+    }
+  }
+  
   const now = new Date().toISOString();
   const hasError = !!req.body.error;
   const needsReview = req.body.needsReview === true;
@@ -517,4 +552,35 @@ export function toggleSchedule(req, res) {
   logActivity('user', 'schedule_toggled', { taskId: tasks[idx].id, title: tasks[idx].title, enabled: tasks[idx].scheduleEnabled });
   broadcast('tasks', tasks.filter(t => t.status !== 'archived'));
   res.json(tasks[idx]);
+}
+
+export function addTaskComment(req, res) {
+  const tasks = readTasks();
+  const idx = tasks.findIndex(t => t.id === req.params.id);
+  if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  
+  const now = new Date().toISOString();
+  const comment = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    taskId: req.params.id,
+    author: req.body.author || 'Unknown',
+    text: req.body.text || '',
+    type: req.body.type || 'comment',
+    timestamp: now
+  };
+  
+  if (!tasks[idx].comments) tasks[idx].comments = [];
+  tasks[idx].comments.push(comment);
+  tasks[idx].updatedAt = now;
+  
+  writeTasks(tasks);
+  
+  logActivity('bot', 'task_comment', {
+    taskId: req.params.id,
+    title: tasks[idx].title,
+    author: comment.author
+  });
+  
+  broadcast('tasks', tasks);
+  res.json(comment);
 }
