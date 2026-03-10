@@ -437,7 +437,7 @@ export default function SettingsPage() {
       <div className="rounded-lg border border-border bg-card p-5 space-y-4">
         <div className="flex items-center gap-2">
           <Zap size={16} className="text-muted-foreground" />
-          <h3 className="font-medium text-sm">VidClaw Version</h3>
+          <h3 className="font-medium text-sm">AgentOS Version</h3>
         </div>
         {vidclawLoading ? (
           <div className="flex items-center gap-2 text-xs text-muted-foreground">

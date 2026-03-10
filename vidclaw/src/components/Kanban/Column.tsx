@@ -1,209 +1,11 @@
-import React, { useState, useRef, useEffect } from 'react'
+import React from 'react'
 import { useDroppable } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import TaskCard from './TaskCard'
-import { Plus, X, Trash2 } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import HeartbeatTimer from '../Usage/HeartbeatTimer'
-import { api } from '@/lib/api'
-import type { Task, Skill, Capacity } from '@/types/api'
-
-const SCHEDULE_OPTIONS = [
-  { id: 'daily', label: 'Daily' },
-  { id: 'weekly', label: 'Weekly' },
-  { id: 'monthly', label: 'Monthly' },
-  { id: '2d', label: 'Every 2 days' },
-  { id: '3d', label: 'Every 3 days' },
-  { id: '1h', label: 'Every hour' },
-  { id: '2h', label: 'Every 2 hours' },
-  { id: '6h', label: 'Every 6 hours' },
-  { id: '12h', label: 'Every 12 hours' },
-  { id: '2w', label: 'Every 2 weeks' },
-]
-
-const PROJECT_OPTIONS = [
-  { id: 'createya', label: 'Createya' },
-  { id: 'agent-console', label: 'Agent Console' },
-  { id: 'hybrid', label: 'Hybrid' },
-]
-
-interface SuggestItem {
-  id: string
-  label: string
-}
-
-interface QuickAddInputProps {
-  inputRef: React.RefObject<HTMLTextAreaElement | null>
-  title: string
-  setTitle: (t: string) => void
-  onSubmit: () => void
-  skills: Skill[]
-  project: string
-  setProject: (p: string) => void
-}
-
-function QuickAddInput({ inputRef, title, setTitle, onSubmit, skills, project, setProject }: QuickAddInputProps) {
-  const [showSuggest, setShowSuggest] = useState(false)
-  const [suggestFilter, setSuggestFilter] = useState('')
-  const [suggestIndex, setSuggestIndex] = useState(0)
-  const [suggestType, setSuggestType] = useState<'skill' | 'schedule'>('skill')
-  const suggestRef = useRef<HTMLDivElement | null>(null)
-
-  function getTriggerInfo(text: string, cursorPos: number, char: string): { idx: number; query: string } | null {
-    const before = text.slice(0, cursorPos)
-    const idx = before.lastIndexOf(char)
-    if (idx === -1) return null
-    const query = before.slice(idx + 1)
-    if (/\s/.test(query)) return null
-    return { idx, query }
-  }
-
-  function getFilteredItems(): SuggestItem[] {
-    if (suggestType === 'schedule') {
-      return SCHEDULE_OPTIONS.filter(o => o.id.toLowerCase().includes(suggestFilter.toLowerCase()))
-    }
-    return skills
-      .map(s => s.id || s.name)
-      .filter(id => id.toLowerCase().includes(suggestFilter.toLowerCase()))
-      .slice(0, 10)
-      .map(id => ({ id, label: id }))
-  }
-
-  function insertItem(item: SuggestItem) {
-    const el = inputRef.current
-    if (!el) return
-    const cursorPos = el.selectionStart || title.length
-    const char = suggestType === 'schedule' ? '/' : '@'
-    const info = getTriggerInfo(title, cursorPos, char)
-    if (!info) return
-    const before = title.slice(0, info.idx)
-    const after = title.slice(cursorPos)
-    const newTitle = before + char + item.id + ' ' + after
-    setTitle(newTitle)
-    setShowSuggest(false)
-    setSuggestFilter('')
-    setTimeout(() => {
-      if (el) {
-        const pos = before.length + 1 + item.id.length + 1
-        el.selectionStart = el.selectionEnd = pos
-        el.focus()
-      }
-    }, 0)
-  }
-
-  function handleChange(e: React.ChangeEvent<HTMLTextAreaElement>) {
-    const val = e.target.value
-    setTitle(val)
-    const el = e.target
-    el.style.height = 'auto'
-    el.style.height = Math.min(el.scrollHeight, 140) + 'px'
-    el.style.overflowY = el.scrollHeight > 140 ? 'auto' : 'hidden'
-
-    const cursorPos = el.selectionStart || val.length
-    const slashInfo = getTriggerInfo(val, cursorPos, '/')
-    const atInfo = getTriggerInfo(val, cursorPos, '@')
-
-    if (slashInfo && (!atInfo || slashInfo.idx > atInfo.idx)) {
-      setSuggestType('schedule')
-      setSuggestFilter(slashInfo.query)
-      setSuggestIndex(0)
-      setShowSuggest(true)
-    } else if (atInfo) {
-      setSuggestType('skill')
-      setSuggestFilter(atInfo.query)
-      setSuggestIndex(0)
-      setShowSuggest(true)
-    } else {
-      setShowSuggest(false)
-    }
-  }
-
-  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (showSuggest) {
-      const filtered = getFilteredItems()
-      if (e.key === 'ArrowDown') {
-        e.preventDefault()
-        setSuggestIndex(i => Math.min(i + 1, filtered.length - 1))
-        return
-      }
-      if (e.key === 'ArrowUp') {
-        e.preventDefault()
-        setSuggestIndex(i => Math.max(i - 1, 0))
-        return
-      }
-      if (e.key === 'Tab' || (e.key === 'Enter' && filtered.length > 0)) {
-        e.preventDefault()
-        if (filtered[suggestIndex]) insertItem(filtered[suggestIndex])
-        return
-      }
-      if (e.key === 'Escape') {
-        setShowSuggest(false)
-        return
-      }
-    }
-    if (e.key === 'Enter' && !showSuggest) { e.preventDefault(); onSubmit() }
-    if (e.key === 'Escape' && !showSuggest) { setTitle('') }
-  }
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (suggestRef.current && !suggestRef.current.contains(e.target as Node)) {
-        setShowSuggest(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClick)
-    return () => document.removeEventListener('mousedown', handleClick)
-  }, [])
-
-  const filtered = getFilteredItems()
-
-  return (
-    <div className="space-y-2" ref={suggestRef}>
-      <textarea
-        ref={inputRef}
-        value={title}
-        onChange={handleChange}
-        onKeyDown={handleKeyDown}
-        placeholder="Task... (@ skills, / schedule)"
-        rows={1}
-        style={{ overflow: 'hidden' }}
-        className="w-full bg-secondary/80 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25"
-      />
-      <select
-        value={project}
-        onChange={e => setProject(e.target.value)}
-        className="w-full bg-secondary/80 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
-      >
-        <option value="">Select project...</option>
-        {PROJECT_OPTIONS.map(p => (
-          <option key={p.id} value={p.id}>{p.label}</option>
-        ))}
-      </select>
-      <div className="relative">
-      {showSuggest && filtered.length > 0 && (
-        <div className="absolute z-50 bottom-full mb-1 w-full max-h-40 overflow-y-auto bg-card border border-border rounded-md shadow-lg">
-          {filtered.map((item, i) => (
-            <button
-              key={item.id}
-              type="button"
-              onMouseDown={(e) => { e.preventDefault(); insertItem(item) }}
-              className={cn(
-                'w-full text-left px-3 py-1.5 text-sm transition-colors',
-                i === suggestIndex ? 'bg-primary/20 text-foreground' : 'text-muted-foreground hover:bg-secondary/80 hover:text-foreground'
-              )}
-            >
-              <span className="text-muted-foreground">{suggestType === 'schedule' ? '/' : '@'}</span>{item.id}
-              {suggestType === 'schedule' && item.label !== item.id && (
-                <span className="text-muted-foreground/60 ml-2">{item.label}</span>
-              )}
-            </button>
-          ))}
-        </div>
-      )}
-      </div>
-    </div>
-  )
-}
+import type { Task, Capacity } from '@/types/api'
 
 interface ColumnDef {
   id: string
@@ -215,7 +17,7 @@ interface ColumnProps {
   column: ColumnDef
   tasks: Task[]
   onAdd: () => void
-  onQuickAdd?: (columnId: string, title: string, skills: string[], schedule: string | null, project?: string) => void
+  onQuickAdd: (status: string, title: string, skills?: string[], schedule?: string | null, project?: string) => Promise<void>
   onEdit: (task: Task) => void
   onView: (task: Task) => void
   onDelete: (id: string) => void
@@ -228,47 +30,6 @@ interface ColumnProps {
 
 export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onView, onDelete, onRun, onToggleSchedule, onBulkArchive, onReview, capacity }: ColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
-  const [adding, setAdding] = useState(false)
-  const [title, setTitle] = useState('')
-  const [project, setProject] = useState('')
-  const [skills, setSkills] = useState<Skill[]>([])
-  const inputRef = useRef<HTMLTextAreaElement | null>(null)
-
-  useEffect(() => {
-    if (adding && inputRef.current) inputRef.current.focus()
-  }, [adding])
-
-  useEffect(() => {
-    api.skills.list().then(setSkills).catch(() => {})
-  }, [])
-
-  const handleSubmit = () => {
-    const t = title.trim()
-    if (!t) return
-    const skillMatches = t.match(/@(\S+)/g) || []
-    const mentionedSkills = skillMatches.map(m => m.slice(1))
-    const scheduleMatch = t.match(/\/(\S+)/)
-    let schedule: string | null = null
-    if (scheduleMatch) {
-      const s = scheduleMatch[1].toLowerCase()
-      if (['daily', 'weekly', 'monthly'].includes(s)) schedule = s
-      else {
-        const m = s.match(/^(\d+)(h|d|w|m)$/)
-        if (m) {
-          const n = parseInt(m[1]), u = m[2]
-          if (u === 'h') schedule = n === 1 ? '0 * * * *' : `0 */${n} * * *`
-          else if (u === 'd') schedule = n === 1 ? '0 9 * * *' : `0 9 */${n} * *`
-          else if (u === 'w') schedule = `0 9 */${n * 7} * *`
-          else if (u === 'm') schedule = n === 1 ? '0 9 1 * *' : `0 9 1 */${n} *`
-        }
-      }
-    }
-    const cleanTitle = t.replace(/@\S+/g, '').replace(/\/\S+/g, '').replace(/\s+/g, ' ').trim()
-    onQuickAdd?.(column.id, cleanTitle || t, mentionedSkills, schedule, project || undefined)
-    setTitle('')
-    setProject('')
-  }
-
   const taskIds = tasks.map(t => t.id)
 
   return (
@@ -351,41 +112,13 @@ export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onVie
       </div>
 
       {(column.id === 'backlog' || column.id === 'todo') && <div className="p-2 border-t border-border/50">
-        {!adding ? (
-          <button
-            onClick={() => setAdding(true)}
-            className="flex items-center gap-1.5 w-full text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary/50"
-          >
-            <Plus size={14} />
-            <span>Add a card</span>
-          </button>
-        ) : (
-          <div className="space-y-2">
-            <QuickAddInput
-              inputRef={inputRef}
-              title={title}
-              setTitle={setTitle}
-              onSubmit={handleSubmit}
-              skills={skills}
-              project={project}
-              setProject={setProject}
-            />
-            <div className="flex items-center gap-2">
-              <button
-                onClick={handleSubmit}
-                className="px-3 py-1 text-xs font-medium bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-              >
-                Add card
-              </button>
-              <button
-                onClick={() => { setAdding(false); setTitle(''); setProject('') }}
-                className="text-muted-foreground hover:text-foreground transition-colors"
-              >
-                <X size={16} />
-              </button>
-            </div>
-          </div>
-        )}
+        <button
+          onClick={onAdd}
+          className="flex items-center gap-1.5 w-full text-sm text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-lg hover:bg-secondary/50"
+        >
+          <Plus size={14} />
+          <span>Add a card</span>
+        </button>
       </div>}
     </div>
   )

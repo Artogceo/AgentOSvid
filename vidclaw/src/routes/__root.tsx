@@ -63,7 +63,7 @@ function RootLayout() {
   }, [])
 
   const currentLabel =
-    navItems.find((n) => pathname.startsWith(n.to))?.label || "VidClaw"
+    navItems.find((n) => pathname.startsWith(n.to))?.label || "AgentOS"
 
   return (
     <div className="flex h-dvh overflow-hidden">
@@ -84,9 +84,9 @@ function RootLayout() {
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div>
             <h1 className="text-lg font-bold bg-gradient-to-r from-orange-400 to-amber-400 bg-clip-text text-transparent">
-              ⚡ VidClaw
+              🚀 AgentOS
             </h1>
-            <p className="text-xs text-muted-foreground mt-0.5">Clawmand Center</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Agent Operating System</p>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -116,7 +116,7 @@ function RootLayout() {
           to="/settings"
           className="p-3 border-t border-border text-xs text-muted-foreground hover:text-foreground transition-colors text-left flex items-center gap-1.5 w-full"
         >
-          <span>VidClaw v{__APP_VERSION__}</span>
+          <span>AgentOS v{__APP_VERSION__}</span>
           {updateAvailable && (
             <span
               className="inline-block w-2 h-2 rounded-full bg-amber-400 shrink-0"
