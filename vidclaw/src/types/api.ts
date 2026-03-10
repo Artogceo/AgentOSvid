@@ -11,6 +11,7 @@ export interface RunHistoryEntry {
   startedAt: string | null
   result: string | null
   error: string | null
+  reviewComment?: string | null
 }
 
 export interface Task {
@@ -20,7 +21,7 @@ export interface Task {
   priority: "low" | "medium" | "high"
   skill: string
   skills: string[]
-  status: "backlog" | "todo" | "in-progress" | "done" | "archived"
+  status: "backlog" | "todo" | "in-progress" | "needs_review" | "done" | "archived"
   createdAt: string
   updatedAt: string
   completedAt: string | null
@@ -33,6 +34,10 @@ export interface Task {
   error: string | null
   channel: string | null
   order: number
+  project: string | null
+  org: string | null
+  orgComment: string | null
+  reviewComment: string | null
   source: string | null
   sourceMessageId: string | null
   subagentId: string | null
@@ -40,6 +45,10 @@ export interface Task {
   attachments: Attachment[]
   previousStatus: string | null
   archivedAt: string | null
+  project: string | null
+  org: string | null
+  orgComment: string | null
+  reviewComment: string | null
 }
 
 export interface CreateTaskRequest {
@@ -48,10 +57,14 @@ export interface CreateTaskRequest {
   priority?: "low" | "medium" | "high"
   skill?: string
   skills?: string[]
-  status?: "backlog" | "todo" | "in-progress" | "done"
+  status?: "backlog" | "todo" | "in-progress" | "needs_review" | "done"
   schedule?: string | null
   scheduledAt?: string | null
   channel?: string | null
+  project?: string | null
+  org?: string | null
+  orgComment?: string | null
+  reviewComment?: string | null
   source?: string | null
   sourceMessageId?: string | null
   order?: number
@@ -74,6 +87,10 @@ export interface UpdateTaskRequest {
   order?: number
   subagentId?: string | null
   channel?: string | null
+  project?: string | null
+  org?: string | null
+  orgComment?: string | null
+  reviewComment?: string | null
   source?: string | null
   sourceMessageId?: string | null
   _actor?: string
