@@ -161,17 +161,19 @@ export function runTask(req, res) {
   res.json({ success: true, message: 'Task queued for execution' });
 }
 
+function countPickedUp(tasks) {
+  return tasks.filter(t => t.status === 'in-progress' && t.pickedUp).length;
+}
+
 export function getTaskQueue(req, res) {
   const tasks = readTasks();
   const now = new Date();
   const queue = tasks.filter(t => {
     if (t.status === 'in-progress' && !t.pickedUp) return true;
     if (t.status !== 'todo') return false;
-    // Paused recurring tasks shouldn't enter queue
     if (t.schedule && t.scheduleEnabled === false) return false;
     if (!t.schedule) return true;
     if (t.schedule === 'asap' || t.schedule === 'next-heartbeat') return true;
-    // Check scheduledAt for recurring tasks
     if (t.scheduledAt) return new Date(t.scheduledAt) <= now;
     if (t.schedule !== 'asap' && t.schedule !== 'next-heartbeat') {
       return new Date(t.schedule) <= now;
@@ -187,7 +189,7 @@ export function getTaskQueue(req, res) {
 
   const settings = readSettings();
   const maxConcurrent = settings.maxConcurrent || 1;
-  const activeCount = tasks.filter(t => t.status === 'in-progress' && t.pickedUp).length;
+  const activeCount = countPickedUp(tasks);
   const remainingSlots = Math.max(0, maxConcurrent - activeCount);
 
   const staleCount = queue.filter(t => t.scheduledAt && new Date(t.scheduledAt) <= now).length;
@@ -199,6 +201,12 @@ export function pickupTask(req, res) {
   const tasks = readTasks();
   const idx = tasks.findIndex(t => t.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
+  const settings = readSettings();
+  const maxConcurrent = settings.maxConcurrent || 1;
+  const activeCount = countPickedUp(tasks);
+  if (activeCount >= maxConcurrent) {
+    return res.status(409).json({ error: 'Max concurrent tasks reached. Wait for a slot to free up.' });
+  }
   tasks[idx].pickedUp = true;
   tasks[idx].status = 'in-progress';
   tasks[idx].startedAt = tasks[idx].startedAt || new Date().toISOString();
@@ -280,6 +288,7 @@ export function completeTask(req, res) {
   broadcast('tasks', tasks);
   res.json(tasks[idx]);
 }
+
 export function reviewTask(req, res) {
   const tasks = readTasks();
   const idx = tasks.findIndex(t => t.id === req.params.id);

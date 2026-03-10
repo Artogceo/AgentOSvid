@@ -11,7 +11,7 @@ All endpoints are served on `localhost:3333`.
 | PUT | `/api/tasks/:id` | Update a task |
 | DELETE | `/api/tasks/:id` | Delete a task |
 | POST | `/api/tasks/:id/run` | Mark task for immediate execution |
-| POST | `/api/tasks/:id/pickup` | Mark task as picked up by agent |
+| POST | `/api/tasks/:id/pickup` | Mark task as picked up by agent (fails if max concurrent slots reached) |
 | POST | `/api/tasks/:id/complete` | Mark task as done with result (set `needsReview: true` to keep it in `needs_review`) |
 | POST | `/api/tasks/:id/review` | Org action (`done` or `rework`) with optional comment |
 | GET | `/api/tasks/queue` | Get executable task queue (sorted by priority) |
