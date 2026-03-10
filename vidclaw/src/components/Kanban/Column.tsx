@@ -21,6 +21,12 @@ const SCHEDULE_OPTIONS = [
   { id: '2w', label: 'Every 2 weeks' },
 ]
 
+const PROJECT_OPTIONS = [
+  { id: 'createya', label: 'Createya' },
+  { id: 'agent-console', label: 'Agent Console' },
+  { id: 'hybrid', label: 'Hybrid' },
+]
+
 interface SuggestItem {
   id: string
   label: string
@@ -32,9 +38,11 @@ interface QuickAddInputProps {
   setTitle: (t: string) => void
   onSubmit: () => void
   skills: Skill[]
+  project: string
+  setProject: (p: string) => void
 }
 
-function QuickAddInput({ inputRef, title, setTitle, onSubmit, skills }: QuickAddInputProps) {
+function QuickAddInput({ inputRef, title, setTitle, onSubmit, skills, project, setProject }: QuickAddInputProps) {
   const [showSuggest, setShowSuggest] = useState(false)
   const [suggestFilter, setSuggestFilter] = useState('')
   const [suggestIndex, setSuggestIndex] = useState(0)
@@ -150,7 +158,7 @@ function QuickAddInput({ inputRef, title, setTitle, onSubmit, skills }: QuickAdd
   const filtered = getFilteredItems()
 
   return (
-    <div className="relative" ref={suggestRef}>
+    <div className="space-y-2" ref={suggestRef}>
       <textarea
         ref={inputRef}
         value={title}
@@ -161,6 +169,17 @@ function QuickAddInput({ inputRef, title, setTitle, onSubmit, skills }: QuickAdd
         style={{ overflow: 'hidden' }}
         className="w-full bg-secondary/80 border border-border rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground resize-none focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/25"
       />
+      <select
+        value={project}
+        onChange={e => setProject(e.target.value)}
+        className="w-full bg-secondary/80 border border-border rounded-lg px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary/50"
+      >
+        <option value="">Select project...</option>
+        {PROJECT_OPTIONS.map(p => (
+          <option key={p.id} value={p.id}>{p.label}</option>
+        ))}
+      </select>
+      <div className="relative">
       {showSuggest && filtered.length > 0 && (
         <div className="absolute z-50 bottom-full mb-1 w-full max-h-40 overflow-y-auto bg-card border border-border rounded-md shadow-lg">
           {filtered.map((item, i) => (
@@ -181,6 +200,7 @@ function QuickAddInput({ inputRef, title, setTitle, onSubmit, skills }: QuickAdd
           ))}
         </div>
       )}
+      </div>
     </div>
   )
 }
@@ -195,7 +215,7 @@ interface ColumnProps {
   column: ColumnDef
   tasks: Task[]
   onAdd: () => void
-  onQuickAdd?: (columnId: string, title: string, skills: string[], schedule: string | null) => void
+  onQuickAdd?: (columnId: string, title: string, skills: string[], schedule: string | null, project?: string) => void
   onEdit: (task: Task) => void
   onView: (task: Task) => void
   onDelete: (id: string) => void
@@ -210,6 +230,7 @@ export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onVie
   const { setNodeRef, isOver } = useDroppable({ id: column.id })
   const [adding, setAdding] = useState(false)
   const [title, setTitle] = useState('')
+  const [project, setProject] = useState('')
   const [skills, setSkills] = useState<Skill[]>([])
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -243,8 +264,9 @@ export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onVie
       }
     }
     const cleanTitle = t.replace(/@\S+/g, '').replace(/\/\S+/g, '').replace(/\s+/g, ' ').trim()
-    onQuickAdd?.(column.id, cleanTitle || t, mentionedSkills, schedule)
+    onQuickAdd?.(column.id, cleanTitle || t, mentionedSkills, schedule, project || undefined)
     setTitle('')
+    setProject('')
   }
 
   const taskIds = tasks.map(t => t.id)
@@ -345,6 +367,8 @@ export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onVie
               setTitle={setTitle}
               onSubmit={handleSubmit}
               skills={skills}
+              project={project}
+              setProject={setProject}
             />
             <div className="flex items-center gap-2">
               <button
@@ -354,7 +378,7 @@ export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onVie
                 Add card
               </button>
               <button
-                onClick={() => { setAdding(false); setTitle('') }}
+                onClick={() => { setAdding(false); setTitle(''); setProject('') }}
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 <X size={16} />

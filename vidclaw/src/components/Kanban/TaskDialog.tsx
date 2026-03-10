@@ -232,6 +232,8 @@ function buildScheduleString({ scheduleInterval, schedulePeriod, scheduleTime }:
 interface TaskForm {
   title: string
   description: string
+  project: string
+  priority: string
   skills: string[]
   status: string
   channel: string
@@ -252,7 +254,7 @@ interface TaskDialogProps {
 }
 
 export default function TaskDialog({ open, onClose, onSave, onDelete, task, defaultStatus = 'backlog' }: TaskDialogProps) {
-  const [form, setForm] = useState<TaskForm>({ title: '', description: '', skills: [], status: 'backlog', channel: '', scheduleMode: 'none', scheduleInterval: 1, schedulePeriod: 'days', scheduleTime: '09:00', scheduleCron: '' })
+  const [form, setForm] = useState<TaskForm>({ title: '', description: '', project: '', priority: 'medium', skills: [], status: 'backlog', channel: '', scheduleMode: 'none', scheduleInterval: 1, schedulePeriod: 'days', scheduleTime: '09:00', scheduleCron: '' })
   const [skills, setSkills] = useState<Skill[]>([])
   const [attachments, setAttachments] = useState<Attachment[]>([])
   const [attKey, setAttKey] = useState(0)
@@ -280,9 +282,9 @@ export default function TaskDialog({ open, onClose, onSave, onDelete, task, defa
     if (task) {
       const taskSkills = task.skills && task.skills.length ? task.skills : (task.skill ? [task.skill] : [])
       const sched = parseSchedule(task.schedule)
-      setForm({ title: task.title, description: task.description, skills: taskSkills, status: task.status, channel: task.channel || '', scheduleMode: sched.mode, scheduleInterval: sched.interval, schedulePeriod: sched.period, scheduleTime: sched.time, scheduleCron: sched.cron })
+      setForm({ title: task.title, description: task.description, project: task.project || '', priority: task.priority || 'medium', skills: taskSkills, status: task.status, channel: task.channel || '', scheduleMode: sched.mode, scheduleInterval: sched.interval, schedulePeriod: sched.period, scheduleTime: sched.time, scheduleCron: sched.cron })
     } else {
-      setForm({ title: '', description: '', skills: [], status: defaultStatus, channel: '', scheduleMode: 'none', scheduleInterval: 1, schedulePeriod: 'days', scheduleTime: '09:00', scheduleCron: '' })
+      setForm({ title: '', description: '', project: '', priority: 'medium', skills: [], status: defaultStatus, channel: '', scheduleMode: 'none', scheduleInterval: 1, schedulePeriod: 'days', scheduleTime: '09:00', scheduleCron: '' })
     }
   }, [task, open, defaultStatus])
 
@@ -301,7 +303,7 @@ export default function TaskDialog({ open, onClose, onSave, onDelete, task, defa
       : form.scheduleMode === 'interval' ? buildScheduleString(form)
       : null
     const { scheduleMode, scheduleInterval, schedulePeriod, scheduleTime, scheduleCron, ...rest } = form
-    const data = { ...rest, skill: rest.skills[0] || '', schedule, channel: rest.channel || null }
+    const data = { ...rest, skill: rest.skills[0] || '', schedule, channel: rest.channel || null, project: rest.project || null }
     onSave(data)
   }
 
@@ -339,17 +341,48 @@ export default function TaskDialog({ open, onClose, onSave, onDelete, task, defa
               />
             </div>
 
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Status</label>
+                <select
+                  className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm outline-none"
+                  value={form.status}
+                  onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
+                >
+                  <option value="backlog">Backlog</option>
+                  <option value="todo">Todo</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-muted-foreground mb-1 block">Project *</label>
+                <select
+                  className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm outline-none"
+                  value={form.project}
+                  onChange={e => setForm(f => ({ ...f, project: e.target.value }))}
+                  required
+                >
+                  <option value="">Select project...</option>
+                  <option value="createya">Createya</option>
+                  <option value="agent-console">Agent Console</option>
+                  <option value="hybrid">Hybrid</option>
+                </select>
+              </div>
+            </div>
+
             <div>
-              <label className="text-xs text-muted-foreground mb-1 block">Status</label>
+              <label className="text-xs text-muted-foreground mb-1 block">Priority</label>
               <select
                 className="w-full bg-secondary border border-border rounded-md px-3 py-2 text-sm outline-none"
-                value={form.status}
-                onChange={e => setForm(f => ({ ...f, status: e.target.value }))}
+                value={form.priority}
+                onChange={e => setForm(f => ({ ...f, priority: e.target.value }))}
               >
-                <option value="backlog">Backlog</option>
-                <option value="todo">Todo</option>
-                <option value="in-progress">In Progress</option>
-                <option value="done">Done</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
               </select>
             </div>
 

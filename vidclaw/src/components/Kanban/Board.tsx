@@ -175,8 +175,8 @@ export default function Board({ visible = true }: BoardProps) {
     invalidateTasks()
   }
 
-  async function handleQuickAdd(status: string, title: string, skills: string[] = [], schedule: string | null = null): Promise<void> {
-    await api.tasks.create({ title, status: status as Exclude<Task['status'], 'archived'>, skills, skill: skills[0] || '', schedule })
+  async function handleQuickAdd(status: string, title: string, skills: string[] = [], schedule: string | null = null, project?: string): Promise<void> {
+    await api.tasks.create({ title, status: status as Exclude<Task['status'], 'archived'>, skills, skill: skills[0] || '', schedule, project })
     invalidateTasks()
   }
 

@@ -18,7 +18,7 @@ export interface Task {
   id: string
   title: string
   description: string
-  priority: "low" | "medium" | "high"
+  priority: "low" | "medium" | "high" | "critical"
   skill: string
   skills: string[]
   status: "backlog" | "todo" | "in-progress" | "needs_review" | "done" | "archived"
@@ -50,7 +50,7 @@ export interface Task {
 export interface CreateTaskRequest {
   title: string
   description?: string
-  priority?: "low" | "medium" | "high"
+  priority?: "low" | "medium" | "high" | "critical"
   skill?: string
   skills?: string[]
   status?: "backlog" | "todo" | "in-progress" | "needs_review" | "done"
