@@ -137,11 +137,23 @@ export default function TaskCard({ task, onEdit, onView, onDelete, onRun, onTogg
           </div>
 
           {/* Project/Source Badges Row */}
-          {(task.project || task.source || task.org) && (
+          {(task.project || task.source || task.org || task.tz || (task.attempts && task.attempts > 0)) && (
             <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
               {task.project && (
                 <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400" title="Project">
                   <Folder size={10} /> {task.project}
+                </span>
+              )}
+              {task.tz && (
+                <span className="inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400" title="ТЗ есть">
+                  <FileText size={10} /> ТЗ
+                </span>
+              )}
+              {task.attempts && task.attempts > 0 && (
+                <span className={`inline-flex items-center gap-0.5 text-[10px] px-1.5 py-0.5 rounded-full ${
+                  task.attempts >= 3 ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
+                }`} title={`Попытка ${task.attempts}`}>
+                  <AlertCircle size={10} /> {task.attempts}/3
                 </span>
               )}
               {task.org && (

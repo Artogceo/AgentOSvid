@@ -57,6 +57,7 @@ export function createTask(req, res) {
     channel: req.body.channel || null,
     order: req.body.order ?? tasks.filter(t => t.status === (req.body.status || 'backlog')).length,
     sourceMessageId: req.body.sourceMessageId || null,
+    attempts: 0,  // Счетчик попыток выполнения
   };
   tasks.push(task);
   writeTasks(tasks);
@@ -92,6 +93,7 @@ export function createTaskFromConversation(req, res) {
     sourceMessageId: req.body.sourceMessageId || null,
     subagentId: req.body.subagentId || null,
     pickedUp: autoStart ? true : false,
+    attempts: 0,  // Счетчик попыток выполнения
   };
   tasks.push(task);
   writeTasks(tasks);
@@ -109,7 +111,7 @@ export function updateTask(req, res) {
   const idx = tasks.findIndex(t => t.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
   const wasNotDone = tasks[idx].status !== 'done';
-  const allowedFields = ['title', 'description', 'priority', 'project', 'skill', 'skills', 'status', 'schedule', 'scheduledAt', 'scheduleEnabled', 'result', 'startedAt', 'completedAt', 'error', 'order', 'subagentId', 'channel', 'source', 'sourceMessageId', 'orgComment', 'reviewComment', 'tz'];
+  const allowedFields = ['title', 'description', 'priority', 'project', 'skill', 'skills', 'status', 'schedule', 'scheduledAt', 'scheduleEnabled', 'result', 'startedAt', 'completedAt', 'error', 'order', 'subagentId', 'channel', 'source', 'sourceMessageId', 'orgComment', 'reviewComment', 'tz', 'attempts'];
   const updates = {};
   for (const k of allowedFields) { if (req.body[k] !== undefined) updates[k] = req.body[k]; }
   tasks[idx] = { ...tasks[idx], ...updates, updatedAt: new Date().toISOString() };

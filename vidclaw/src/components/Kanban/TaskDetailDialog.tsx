@@ -248,11 +248,18 @@ export default function TaskDetailDialog({ open, onClose, task }: TaskDetailDial
             </div>
             
             {/* Project/Source/Org Badges */}
-            {(task.project || task.source || task.org || skillsList.length > 0 || task.channel) && (
+            {(task.project || task.source || task.org || skillsList.length > 0 || task.channel || (task.attempts && task.attempts > 0)) && (
               <div className="flex items-center gap-2 mt-2 flex-wrap">
                 {task.project && (
                   <span className="inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400">
                     <Folder size={11} /> {task.project}
+                  </span>
+                )}
+                {task.attempts && task.attempts > 0 && (
+                  <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${
+                    task.attempts >= 3 ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
+                  }`}>
+                    <AlertCircle size={11} /> Попытка {task.attempts}/3
                   </span>
                 )}
                 {task.org && (

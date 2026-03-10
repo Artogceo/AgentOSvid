@@ -56,6 +56,7 @@ export interface Task {
   archivedAt: string | null
   tz: string | null  // Техническое задание от Орга
   comments: Comment[]
+  attempts: number  // Счетчик попыток выполнения (для retry механизма)
 }
 
 export interface CreateTaskRequest {
