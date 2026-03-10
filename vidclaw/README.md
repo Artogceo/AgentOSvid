@@ -75,3 +75,30 @@ MIT
 ---
 
 Copyright (c) 2026 [woocassh](https://x.com/woocassh) · MIT License
+
+## AC Integration (Org/Subagent Workflow)
+
+This fork extends VidClaw with a structured task workflow for teams:
+
+- **Org Agent**: Manages up to 2 concurrent tasks, writes technical specs
+- **Subagents**: Execute tasks (design, backend, etc.)
+- **Review Flow**: Tasks go through `needs_review` state with Done/Rework actions
+- **Project Tracking**: Tasks tagged with project/source for multi-project management
+- **Issue Tracker Integration**: Webhook endpoint for external issue trackers
+
+### New API Endpoints
+
+- `POST /api/tasks/:id/review` - Review task (`action: done|rework`, `comment`)
+- Extended `POST /api/tasks/:id/complete` with `needsReview` flag
+- Queue respects `maxConcurrent` setting (default: 2)
+
+### Webhook Integration
+
+Start the webhook handler:
+```bash
+node scripts/issue-webhook.js
+```
+
+Configure your issue tracker to POST issues to `http://localhost:3334/webhook/issue`
+
+See [TEST_SCENARIOS.md](../TEST_SCENARIOS.md) for full workflow examples.
