@@ -298,6 +298,16 @@ export default function TaskDetailDialog({ open, onClose, task }: TaskDetailDial
 
         <div className="flex-1 overflow-hidden min-h-[300px] flex flex-col md:flex-row">
           <div className="w-full md:w-2/3 overflow-y-auto p-5 space-y-4">
+            {task.tz && (
+              <div className="p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-lg">
+                <h3 className="text-xs font-medium text-indigo-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                  <FileText size={12} /
+                  Техническое задание (ТЗ) от Орга
+                </h3>
+                <div className="text-sm text-foreground/90 whitespace-pre-wrap">{task.tz}</div>
+              </div>
+            )}
+
             {task.description && (
               <div>
                 <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Description</h3>

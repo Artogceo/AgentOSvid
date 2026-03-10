@@ -14,6 +14,15 @@ export interface RunHistoryEntry {
   reviewComment?: string | null
 }
 
+export interface Comment {
+  id: string
+  taskId: string
+  author: string
+  text: string
+  type: 'comment' | 'pickup' | 'tz' | 'report'
+  timestamp: string
+}
+
 export interface Task {
   id: string
   title: string
@@ -45,6 +54,8 @@ export interface Task {
   attachments: Attachment[]
   previousStatus: string | null
   archivedAt: string | null
+  tz: string | null  // Техническое задание от Орга
+  comments: Comment[]
 }
 
 export interface CreateTaskRequest {

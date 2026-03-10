@@ -52,6 +52,7 @@ export function createTask(req, res) {
     error: null,
     orgComment: req.body.orgComment || null,
     reviewComment: req.body.reviewComment || null,
+    tz: req.body.tz || null,
     source: req.body.source || 'manual',
     channel: req.body.channel || null,
     order: req.body.order ?? tasks.filter(t => t.status === (req.body.status || 'backlog')).length,
@@ -108,7 +109,7 @@ export function updateTask(req, res) {
   const idx = tasks.findIndex(t => t.id === req.params.id);
   if (idx === -1) return res.status(404).json({ error: 'Not found' });
   const wasNotDone = tasks[idx].status !== 'done';
-  const allowedFields = ['title', 'description', 'priority', 'project', 'skill', 'skills', 'status', 'schedule', 'scheduledAt', 'scheduleEnabled', 'result', 'startedAt', 'completedAt', 'error', 'order', 'subagentId', 'channel', 'source', 'sourceMessageId', 'orgComment', 'reviewComment'];
+  const allowedFields = ['title', 'description', 'priority', 'project', 'skill', 'skills', 'status', 'schedule', 'scheduledAt', 'scheduleEnabled', 'result', 'startedAt', 'completedAt', 'error', 'order', 'subagentId', 'channel', 'source', 'sourceMessageId', 'orgComment', 'reviewComment', 'tz'];
   const updates = {};
   for (const k of allowedFields) { if (req.body[k] !== undefined) updates[k] = req.body[k]; }
   tasks[idx] = { ...tasks[idx], ...updates, updatedAt: new Date().toISOString() };
