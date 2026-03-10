@@ -16,6 +16,7 @@ import {
   Sun,
   Moon,
   KeyRound,
+  Users,
 } from "lucide-react"
 import { useTheme } from "@/components/ThemeContext"
 import { useSocketQueryInvalidation } from "@/hooks/useSocketQueryInvalidation"
@@ -27,6 +28,7 @@ const navItems = [
   { to: "/skills", label: "Skills", icon: Puzzle },
   { to: "/soul", label: "Soul", icon: Heart },
   { to: "/credentials", label: "Credentials", icon: KeyRound },
+  { to: "/agents", label: "Команда", icon: Users },
   { to: "/settings", label: "Settings", icon: Settings },
 ] as const
 

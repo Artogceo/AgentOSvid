@@ -97,8 +97,8 @@ export default function Column({ column, tasks, onAdd, onQuickAdd, onEdit, onVie
                   </button>
                   <button
                     onClick={() => {
-                      const comment = window.prompt('Rework instructions:') || ''
-                      if (comment) onReview(task.id, 'rework', comment)
+                      const comment = window.prompt('Rework instructions (optional):') || ''
+                      onReview(task.id, 'rework', comment)  // ← Убрал проверку if (comment)
                     }}
                     className="flex-1 text-[10px] px-2 py-1 bg-amber-500/20 text-amber-400 rounded hover:bg-amber-500/30 transition-colors"
                   >

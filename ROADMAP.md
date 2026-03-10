@@ -71,3 +71,27 @@ node scripts/issue-webhook.js --port 3334
 3. Subagent выполняет → `complete` с `needsReview=true` → `needs_review`
 4. Орг/Артур → кнопка `Done`/`Rework` → `done` или обратно в `todo`
 5. При `rework` комментарий сохраняется в `orgComment` для субагента
+
+---
+
+## 🆕 Updates 2026-03-10
+
+### Phase 4: Team/Agents Section ✅
+- [x] Created `/agents` route
+- [x] AgentsPage component with all 5 agents (Mark, Johnny, Pasha, Org, Steve)
+- [x] Agent status display (active/offline with real-time updates)
+- [x] Document viewer (SOUL.md, AGENTS.md)
+- [x] Model configuration per agent
+
+### Phase 5: UI/UX Fixes ✅
+- [x] TZ (technical specification) visible in all task statuses
+- [x] Fixed "Rework" button (now works with or without comment)
+- [x] Attempts counter badge in task cards
+- [x] Full task dialog on "+" button (replaced quick-add)
+
+### Phase 6: Cron Automation ✅
+- [x] `vidclaw-orchestrator-v2` — every 5 minutes
+- [x] `vidclaw-stale-recovery-v2` — every 10 minutes  
+- [x] Auto-retry logic (max 3 attempts)
+- [x] Auto-escalation to `needs_review` after max attempts
+- [x] Activity logging for all automated actions
