@@ -114,6 +114,18 @@ export function updateTask(req, res) {
   const allowedFields = ['title', 'description', 'priority', 'project', 'skill', 'skills', 'status', 'schedule', 'scheduledAt', 'scheduleEnabled', 'result', 'startedAt', 'completedAt', 'error', 'order', 'subagentId', 'channel', 'source', 'sourceMessageId', 'orgComment', 'reviewComment', 'tz', 'attempts'];
   const updates = {};
   for (const k of allowedFields) { if (req.body[k] !== undefined) updates[k] = req.body[k]; }
+  
+  // Защита: статус in-progress можно установить только через /pickup endpoint
+  if (updates.status === 'in-progress' && tasks[idx].status !== 'in-progress') {
+    // Проверяем, был ли вызван pickup корректно
+    if (!updates.pickedUp && !tasks[idx].pickedUp) {
+      return res.status(403).json({ 
+        error: 'Статус in-progress можно установить только через POST /api/tasks/:id/pickup',
+        hint: 'Используйте endpoint pickup для взятия задачи в работу'
+      });
+    }
+  }
+  
   tasks[idx] = { ...tasks[idx], ...updates, updatedAt: new Date().toISOString() };
   // Recompute scheduledAt when schedule changes
   if (updates.schedule !== undefined) {
